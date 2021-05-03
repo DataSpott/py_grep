@@ -34,3 +34,28 @@ docker run --rm -it -v $PWD:/input dataspott/sgt_analyser:v0.9.1
 ```bash
 /input/py_grep.py --help
 ```
+
+## Usage
+*py_grep* offers support for xls-, tsv- and csv-files. Conversion is done automatically.
+
+Following flags can be used to control the program:
+
+**Necessary flags**
+
+Flag|Description
+-|-
+**[-i]  [--input]**|Path to the input file to read the data from
+**[-s]  [--search]**|One or multiple terms to search for
+
+**Optional flags**
+
+Flag|Description
+-|-
+**[-c]  [--columns]**|One or multiple columns of the table to search through. By default all columns will be searched [default: all].
+**[-n]  [--sheet_nr]**|Number of the excel-sheet, which is taken as input. By default the first sheet of the file is taken [default: 0].
+**[-o]  [--output]**|Output-directory where *py_grep* creates its result-directory. By default the output-directory is the current working directory [default: $PWD].
+**[--md]**|Activates output of the result-file in .md-format.
+**[--csv]**|Deactivates output of the result-file in .csv-format.
+**[--isnull]**|Searches for NaN (Overwrites [-s]).
+**[--notnull]**|Searches for notNaN (Overwrites [-s]).
+**[-h]  [--help]**|Shows the help-message.
