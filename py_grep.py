@@ -14,13 +14,13 @@ parser = argparse.ArgumentParser(description = 'Search all rows of a table for a
 
 parser.add_argument('-i', '--input', help = "Input-file", required = True)
 parser.add_argument('-n', '--sheet_nr', help = "Number of the excel sheet in the input-file to read", default = 0)
-parser.add_argument('-c', '--column', nargs = '+', help = "Column to search in.", default = ['all'])
-parser.add_argument('-s', '--search', nargs = '+', help = "Term to search for", default = False)
+parser.add_argument('-c', '--column', nargs = '+', help = "One or multiple columns to search in [default: all]", default = ['all'])
+parser.add_argument('-s', '--search', nargs = '+', help = "One or multiple terms to search for", default = False)
 parser.add_argument('-o', '--output', help = "Name of the output-directory", default = os.getcwd())
-parser.add_argument('--md', action = 'store_true', default = False)
-parser.add_argument('--csv', action = 'store_true', default = False)
-parser.add_argument('--isnull', action = 'store_true', default = False)
-parser.add_argument('--notnull', action = 'store_true', default = False)
+parser.add_argument('--md', help = "Activate output of result-file in .md-format", action = 'store_true', default = False)
+parser.add_argument('--csv', help = "Deactivate output of result-file in .csv-format", action = 'store_false', default = True)
+parser.add_argument('--isnull', help = "Search for NaN [overwrites -s]", action = 'store_true', default = False)
+parser.add_argument('--notnull', help = "Search for notNaN [overwrites -s]", action = 'store_true', default = False)
 
 #parsing:
 arg = parser.parse_args()
@@ -36,6 +36,9 @@ csv_output = arg.csv
 search_isnull = arg.isnull
 search_notnull = arg.notnull
 
+if csv_output == False and md_output == False:
+  sys.exit('Please activate at least one output-format')
+
 if search_term == False and search_isnull == False and search_notnull == False:
   sys.exit('>> One of the following flags is required to start a search: [-s] [--isnull] [--notnull] <<')
 
@@ -50,7 +53,7 @@ if type(sheet_nr) != int:
 ## Set up results-directory & change working-directory if necessary
 
 #check if output-directory exists & create a Results-directory in it:
-output_path = str(output_path) + '/row_grab_results'
+output_path = str(output_path) + '/py_grep_results'
 os.makedirs(output_path, exist_ok = True)
 
 #check if output-flag was used:
