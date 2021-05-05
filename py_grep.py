@@ -15,7 +15,7 @@ import argparse
 parser = argparse.ArgumentParser(description = 'Search all rows of a table for a specific term.')
 
 parser.add_argument('-i', '--input', help = "Input-file", required = True)
-parser.add_argument('-n', '--sheet_nr', help = "Number of the excel sheet in the input-file to read", default = 0)
+parser.add_argument('-n', '--sheet_nr', nargs = '+', help = "Number of the excel sheet in the input-file to read", default = ['0'])
 parser.add_argument('-c', '--column', nargs = '+', help = "One or multiple columns to search in [default: all]", default = ['all'])
 parser.add_argument('-s', '--search', nargs = '+', help = "One or multiple terms to search for", default = False)
 parser.add_argument('-o', '--output', help = "Name of the output-directory", default = os.getcwd())
@@ -29,7 +29,7 @@ arg = parser.parse_args()
 
 #define arguments as variables:
 input_file = arg.input
-sheet_nr = int(arg.sheet_nr)
+sheet_nr = arg.sheet_nr
 search_column = arg.column
 search_term = arg.search
 output_path = arg.output
@@ -46,9 +46,6 @@ if search_term == False and search_isnull == False and search_notnull == False:
 
 if search_isnull == True and search_notnull == True:
   sys.exit('>> Can´t search for null & notnull at the same time. <<')
-
-if type(sheet_nr) != int:
-  sys.exit('>> Please insert a single number to define the the sheet to read from. <<')
 
 
 ################################################################################
@@ -75,10 +72,24 @@ elif search_notnull == True:
 
 
 ################################################################################
+## Configure sheet_nr
+
+parsed_sheet_nr = []
+[parsed_sheet_nr.extend(list(range(int(element[0]),(int(element[2]) + 1)))) if '-' in element else parsed_sheet_nr.append(int(element)) for element in sheet_nr]
+
+
+################################################################################
 ## File-conversion
 
 if ".xls" in input_file:
-  data = pd.read_excel(input_file, sheet_name = sheet_nr)
+  if len(parsed_sheet_nr) == 1:
+    data = pd.read_excel(input_file, sheet_name = parsed_sheet_nr[0])   
+  else:
+    data = pd.DataFrame()
+    #xls = pd.ExcelFile(input_file)
+    #for i in sheet_nr:
+    #  data = data.append(pd.read_excel(xls, i), ignore_index = true, sort = False)
+    data = data.append([pd.read_excel(input_file, sheet_name = number) for number in parsed_sheet_nr], ignore_index = True, sort = False)
 
 elif ".csv" in input_file or ".tsv" in input_file:
   data = pd.read_csv(input_file)
