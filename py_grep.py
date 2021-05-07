@@ -15,7 +15,7 @@ import argparse
 parser = argparse.ArgumentParser(description = 'Search all rows of a table for a specific term.')
 
 parser.add_argument('-i', '--input', help = "Input-file", required = True)
-parser.add_argument('-n', '--sheet_nr', nargs = '+', help = "Number of the excel sheet in the input-file to read", default = ['0'])
+parser.add_argument('-n', '--sheet_nr', nargs = '+', help = "Number or name of the excel sheet(s) in the input-file to read [default: all]", default = [])
 parser.add_argument('-c', '--column', nargs = '+', help = "One or multiple columns to search in [default: all]", default = ['all'])
 parser.add_argument('-s', '--search', nargs = '+', help = "One or multiple terms to search for", default = False)
 parser.add_argument('-o', '--output', help = "Name of the output-directory", default = os.getcwd())
@@ -39,13 +39,27 @@ search_isnull = arg.isnull
 search_notnull = arg.notnull
 
 if csv_output == False and md_output == False:
-  sys.exit('Please activate at least one output-format')
+  sys.exit('>> Please activate at least one output-format. <<')
 
 if search_term == False and search_isnull == False and search_notnull == False:
   sys.exit('>> One of the following flags is required to start a search: [-s] [--isnull] [--notnull] <<')
 
 if search_isnull == True and search_notnull == True:
   sys.exit('>> Can´t search for null & notnull at the same time. <<')
+
+
+################################################################################
+## Function declarations
+
+def int_convert(element):
+  try:
+    return int(element)
+  except (ValueError, TypeError):
+    return element 
+
+def column_keyerror(column, column_list):
+  if column not in column_list:
+    sys.exit(">> KeyError: Column ['%s'] doesn´t exist in the dataframe. <<" %column)
 
 
 ################################################################################
@@ -74,21 +88,23 @@ elif search_notnull == True:
 ################################################################################
 ## Configure sheet_nr
 
+sheet_nr = [int_convert(element) for element in sheet_nr]
 parsed_sheet_nr = []
-[parsed_sheet_nr.extend(list(range(int(element[0]),(int(element[2]) + 1)))) if '-' in element else parsed_sheet_nr.append(int(element)) for element in sheet_nr]
+[parsed_sheet_nr.extend(list(range(int(element[0]),(int(element[2]) + 1)))) if '-' in str(element) else parsed_sheet_nr.append(element) for element in sheet_nr]
 
 
 ################################################################################
 ## File-conversion
 
-if ".xls" in input_file:
-  if len(parsed_sheet_nr) == 1:
+excel_extensions_list = ['xls', 'xlsx', 'xlsm', 'xlsb', 'odf', 'ods', 'odt']
+
+if any(excel_extension in input_file for excel_extension in excel_extensions_list):
+  if len(parsed_sheet_nr) == 0:
+    data = pd.concat(pd.read_excel(input_file, sheet_name = None), ignore_index = True)
+  elif len(parsed_sheet_nr) == 1:
     data = pd.read_excel(input_file, sheet_name = parsed_sheet_nr[0])   
   else:
     data = pd.DataFrame()
-    #xls = pd.ExcelFile(input_file)
-    #for i in sheet_nr:
-    #  data = data.append(pd.read_excel(xls, i), ignore_index = true, sort = False)
     data = data.append([pd.read_excel(input_file, sheet_name = number) for number in parsed_sheet_nr], ignore_index = True, sort = False)
 
 elif ".csv" in input_file or ".tsv" in input_file:
@@ -98,6 +114,8 @@ else:
   sys.exit('>> Unsupported input-file format. Use .xls, .csv or .tsv instead <<')
 
 data = data.astype(str)
+
+[column_keyerror(column, list(data.columns)) for column in search_column]
 
 
 ################################################################################
@@ -120,7 +138,6 @@ else:
     data_searched = data[data[search_column].notnull().any(axis=1)]
   else:
     data_searched = data[data[search_column].isin(search_term).any(axis=1)]
-
 
 ################################################################################
 ## Output
