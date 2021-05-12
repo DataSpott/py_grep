@@ -15,7 +15,7 @@ import argparse
 parser = argparse.ArgumentParser(description = 'Search all rows of a table for a specific term.')
 
 parser.add_argument('-i', '--input', help = "Input-file", required = True)
-parser.add_argument('-n', '--sheet_nr', nargs = '+', help = "Number or name of the excel sheet(s) in the input-file to read [default: all]", default = [])
+parser.add_argument('-n', '--sheet', nargs = '+', help = "Number or name of the excel sheet(s) in the input-file to read [default: all]", default = [])
 parser.add_argument('-c', '--column', nargs = '+', help = "One or multiple columns to search in [default: all]", default = ['all'])
 parser.add_argument('-s', '--search', nargs = '+', help = "One or multiple terms to search for", default = False)
 parser.add_argument('-o', '--output', help = "Name of the output-directory", default = os.getcwd())
@@ -29,7 +29,7 @@ arg = parser.parse_args()
 
 #define arguments as variables:
 input_file = arg.input
-sheet_nr = arg.sheet_nr
+sheet = arg.sheet
 search_column = arg.column
 search_term = arg.search
 output_path = arg.output
@@ -57,7 +57,7 @@ def int_convert(element):
   except (ValueError, TypeError):
     return element 
 
-def column_keyerror(column, column_list):
+def column_keyError(column, column_list):
   if column not in column_list:
     sys.exit(">> KeyError: Column ['%s'] doesn´t exist in the dataframe. <<" %column)
 
@@ -77,20 +77,11 @@ if output_path != os.getcwd():
 
 
 ################################################################################
-## Configure searched terms
+## Configure sheet
 
-if search_isnull == True:
-  search_term = ['NaN']
-elif search_notnull == True:
-  search_term = ['not NaN']
-
-
-################################################################################
-## Configure sheet_nr
-
-sheet_nr = [int_convert(element) for element in sheet_nr]
-parsed_sheet_nr = []
-[parsed_sheet_nr.extend(list(range(int(element[0]),(int(element[2]) + 1)))) if '-' in str(element) else parsed_sheet_nr.append(element) for element in sheet_nr]
+sheet = [int_convert(element) for element in sheet]
+parsed_sheet = []
+[parsed_sheet.extend(list(range(int(element[0]),(int(element[2]) + 1)))) if '-' in str(element) else parsed_sheet.append(element) for element in sheet]
 
 
 ################################################################################
@@ -99,23 +90,22 @@ parsed_sheet_nr = []
 excel_extensions_list = ['xls', 'xlsx', 'xlsm', 'xlsb', 'odf', 'ods', 'odt']
 
 if any(excel_extension in input_file for excel_extension in excel_extensions_list):
-  if len(parsed_sheet_nr) == 0:
+  if len(parsed_sheet) == 0:
     data = pd.concat(pd.read_excel(input_file, sheet_name = None), ignore_index = True)
-  elif len(parsed_sheet_nr) == 1:
-    data = pd.read_excel(input_file, sheet_name = parsed_sheet_nr[0])   
+  elif len(parsed_sheet) == 1:
+    data = pd.read_excel(input_file, sheet_name = parsed_sheet[0])   
   else:
-    data = pd.DataFrame()
-    data = data.append([pd.read_excel(input_file, sheet_name = number) for number in parsed_sheet_nr], ignore_index = True, sort = False)
+    data = pd.concat([pd.read_excel(input_file, sheet_name = number) for number in parsed_sheet], ignore_index = True)
 
 elif ".csv" in input_file or ".tsv" in input_file:
   data = pd.read_csv(input_file)
 
 else:
-  sys.exit('>> Unsupported input-file format. Use .xls, .csv or .tsv instead <<')
+  sys.exit('>> Unsupported input-file format. Use excel-, .csv- or .tsv-format instead <<')
 
 data = data.astype(str)
 
-[column_keyerror(column, list(data.columns)) for column in search_column]
+[column_keyError(column, list(data.columns)) for column in search_column]
 
 
 ################################################################################
@@ -124,8 +114,10 @@ data = data.astype(str)
 if search_column[0] == 'all':
   if search_isnull == True: 
     data_searched = data[data.isna().any(axis=1)]
+    search_term = ['NaN']
   elif search_notnull == True:
     data_searched = data[data.notnull().any(axis=1)]
+    search_term = ['not NaN']
   else:
     search_str = '|'.join(search_term)
     stacked_df = data.stack() # convert entire data frame into a series of values
@@ -134,8 +126,10 @@ if search_column[0] == 'all':
 else:
   if search_isnull == True:
     data_searched = data[data[search_column].isna().any(axis=1)]
+    search_term = ['NaN']
   elif search_notnull == True:
     data_searched = data[data[search_column].notnull().any(axis=1)]
+    search_term = ['not NaN']
   else:
     data_searched = data[data[search_column].isin(search_term).any(axis=1)]
 
