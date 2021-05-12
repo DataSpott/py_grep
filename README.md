@@ -2,6 +2,9 @@
 
 Search excel-, csv- and tsv-files through arbitrary columns for one or multiple search terms.
 
+Following file-formats are supported:
+xls, xlsx, xlsm, xlsb, odf, ods, odt, csv & tsv
+
 ## Requirements
 For the use of *py_grep* in your terminal there are two options.
 
