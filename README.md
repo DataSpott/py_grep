@@ -58,7 +58,8 @@ Flag|Description
 **[-n]  [--sheet]**|Number or name of the excel-sheet, which is taken as input. You can also specify a range of sheets without whitespaces, e.g. '1-4'. By default all sheets of the file are taken [default: None].
 **[-o]  [--output]**|Output-directory where *py_grep* creates its result-directory. By default the output-directory is the current working directory [default: $PWD].
 **[--md]**|Activates output of the result-file in .md-format.
-**[--csv]**|Deactivates output of the result-file in .csv-format.
+**[--csv]**|Activates output of the result-file in .csv-format.
+**[--tsv]**|Deactivates output of the result-file in .tsv-format.
 **[--isnull]**|Searches for NaN (Overwrites [-s]).
 **[--notnull]**|Searches for notNaN (Overwrites [-s]).
 **[-h]  [--help]**|Shows the help-message.
