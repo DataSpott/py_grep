@@ -20,7 +20,8 @@ parser.add_argument('-c', '--column', nargs = '+', help = "One or multiple colum
 parser.add_argument('-s', '--search', nargs = '+', help = "One or multiple terms to search for", default = False)
 parser.add_argument('-o', '--output', help = "Name of the output-directory", default = os.getcwd())
 parser.add_argument('--md', help = "Activate output of result-file in .md-format", action = 'store_true', default = False)
-parser.add_argument('--csv', help = "Deactivate output of result-file in .csv-format", action = 'store_false', default = True)
+parser.add_argument('--csv', help = "Activate output of result-file in .csv-format", action = 'store_true', default = False)
+parser.add_argument('--tsv', help = "Deactivate output of result-file in .tsv-format", action = 'store_false', default = True)
 parser.add_argument('--isnull', help = "Search for NaN [overwrites -s]", action = 'store_true', default = False)
 parser.add_argument('--notnull', help = "Search for notNaN [overwrites -s]", action = 'store_true', default = False)
 
@@ -35,10 +36,11 @@ search_term = arg.search
 output_path = arg.output
 md_output = arg.md
 csv_output = arg.csv
+tsv_output = arg.tsv
 search_isnull = arg.isnull
 search_notnull = arg.notnull
 
-if csv_output == False and md_output == False:
+if tsv_output == False and csv_output == False and md_output == False:
   sys.exit('>> Please activate at least one output-format. <<')
 
 if search_term == False and search_isnull == False and search_notnull == False:
@@ -58,7 +60,7 @@ def int_convert(element):
     return element 
 
 def column_keyError(column, column_list):
-  if column not in column_list:
+  if column != 'all' and column not in column_list:
     sys.exit(">> KeyError: Column ['%s'] doesn´t exist in the dataframe. <<" %column)
 
 
@@ -121,7 +123,7 @@ if search_column[0] == 'all':
   else:
     search_str = '|'.join(search_term)
     stacked_df = data.stack() # convert entire data frame into a series of values
-    data_searched = data.iloc[stacked_df[stacked_df.str.contains(search_str,na=False)].index.get_level_values(0).drop_duplicates()]
+    data_searched = data.iloc[stacked_df[stacked_df.str.contains(search_str, case = False, na = False)].index.get_level_values(0).drop_duplicates()]
 
 else:
   if search_isnull == True:
@@ -131,7 +133,9 @@ else:
     data_searched = data[data[search_column].notnull().any(axis=1)]
     search_term = ['not NaN']
   else:
-    data_searched = data[data[search_column].isin(search_term).any(axis=1)]
+    stacked_df = data[search_column].stack() # convert entire data frame into a series of values
+    data_searched = data.iloc[stacked_df[stacked_df.str.contains('|'.join(search_term), case = False, na = False)].index.get_level_values(0).drop_duplicates()]
+
 
 ################################################################################
 ## Output
@@ -167,3 +171,12 @@ if csv_output == True:
   result_file_csv.write('\n')
   result_file_csv.write(result_csv)
   result_file_csv.close()
+
+if tsv_output == True:
+  output_file_tsv_name = output_file_basename + ".tsv"
+  result_tsv = data_searched.to_csv(sep='\t')
+  result_file_tsv = open(output_file_tsv_name, "w")
+  result_file_tsv.write(searched_string)
+  result_file_tsv.write('\n')
+  result_file_tsv.write(result_tsv)
+  result_file_tsv.close()
