@@ -90,7 +90,7 @@ def range_parse(element, max_sheets):
 ## Set up results-directory & change working-directory if necessary
 
 #check if output-directory exists & create a Results-directory in it:
-output_path = str(output_path) + '/py_grep_results'
+output_path = str(output_path) + '/pygrep_results'
 os.makedirs(output_path, exist_ok = True)
 
 #check if output-flag was used:
