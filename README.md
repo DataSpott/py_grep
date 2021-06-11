@@ -55,8 +55,10 @@ Flag|Description
 Flag|Description
 -|-
 **[-c]  [--columns]**|One or multiple columns of the table to search through. By default all columns will be searched [default: all].
+**[-d]  [--deact_search_str]**|Deactivates the output of the information string (which terms were searched in which columns) in the first row of the result-file.
 **[-n]  [--sheet]**|Number or name of the excel-sheet, which is taken as input. You can also specify a range of sheets without whitespaces, e.g. '1-4'. By default all sheets of the file are taken [default: None].
 **[-o]  [--output]**|Output-directory where *py_grep* creates its result-directory. By default the output-directory is the current working directory [default: $PWD].
+**[-r]  [--reverse]**|Reverses the search, so that *py_grep* searches for everything except the search-terms given via the [--search]-flag.
 **[--md]**|Activates output of the result-file in .md-format.
 **[--csv]**|Activates output of the result-file in .csv-format.
 **[--tsv]**|Deactivates output of the result-file in .tsv-format.
