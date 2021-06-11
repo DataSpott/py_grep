@@ -142,11 +142,12 @@ if search_column[0] == 'all':
 		search_term = ['not NaN']
 	else:
 		search_str = '|'.join(search_term)
-		stacked_df = data.stack() # convert entire data frame into a series of values
+		stacked_df = data.stack(dropna = False) # convert entire data frame into a series of values
 		if invert_search == False:
 			data_searched = data.iloc[stacked_df[stacked_df.str.contains(search_str, case = False, na = False)].index.get_level_values(0).drop_duplicates()]
 		else:
-			data_searched = data.iloc[stacked_df[~stacked_df.str.contains(search_str, case = False, na = False)].index.get_level_values(0).drop_duplicates()]
+			series_check = (~stacked_df.str.contains(search_str, case = False, na = False)).all(level=0)
+			data_searched = data.iloc[series_check[series_check != False].index]
 
 else:
 	if search_isnull == True:
@@ -156,12 +157,13 @@ else:
 		data_searched = data[data[search_column].notnull().any(axis=1)]
 		search_term = ['not NaN']
 	else:
-		stacked_df = data[search_column].stack() # convert entire data frame into a series of values
+		search_str = '|'.join(search_term)
+		stacked_df = data[search_column].stack(dropna = False)
 		if invert_search == False:
-			data_searched = data.iloc[stacked_df[stacked_df.str.contains('|'.join(search_term), case = False, na = False)].index.get_level_values(0).drop_duplicates()]
+			data_searched = data.iloc[stacked_df[stacked_df.str.contains(search_str, case = False, na = False)].index.get_level_values(0).drop_duplicates()]
 		else:
-			data_searched = data.iloc[stacked_df[~stacked_df.str.contains('|'.join(search_term), case = False, na = False)].index.get_level_values(0).drop_duplicates()]
-
+			series_check = (~stacked_df.str.contains(search_str, case = False, na = False)).all(level=0)
+			data_searched = data.iloc[series_check[series_check != False].index.get_level_values(0)]
 
 ################################################################################
 ## Output
